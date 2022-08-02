@@ -94,6 +94,7 @@ public class Application {
             for (Product product : productList) {
                 System.out.println(product.getId() + " " + product.getName());
             }
+
             String id = IN.nextLine();
             Long idLong = Long.parseLong(id);
             Product product = manager.find(Product.class, idLong);
@@ -116,18 +117,25 @@ public class Application {
                 TypedQuery<SpecValue> specValueTypedQuery = manager.createQuery(
                         "select s from SpecValue s where s.product.id = ?1 and s.specification.id = ?2", SpecValue.class
                 );
-                specValueTypedQuery.setParameter(1, id);
+                specValueTypedQuery.setParameter(1, idLong);
                 specValueTypedQuery.setParameter(2, specification.getId());
                 List<SpecValue> specValueList = specValueTypedQuery.getResultList();
-                if (product.getSpecValues().isEmpty()) {
-                    System.out.println(specification);
+                if (specValueList.isEmpty()) {
+                    System.out.println(specification.getName() + "(добавление)"); //создание, если пусто
                     String productSpecValue = IN.nextLine();
+
                     SpecValue specValue1 = new SpecValue();
                     specValue1.setValue(productSpecValue);
-                    specValue1.getProduct().setCategory(product.getCategory());
+                    specValue1.setProduct(product);
+                    specValue1.setSpecification(specification);
+
+                    manager.persist(specValue1);
+                } else {
+                    System.out.println(specification.getName() + "(обновление)"); //обновление существующих
+                    String productSpecValue = IN.nextLine();
+                    specValueList.get(0).setValue(productSpecValue);
                 }
             }
-
             manager.getTransaction().commit();
         } catch (Exception e) {
             manager.getTransaction().rollback();
@@ -164,6 +172,5 @@ public class Application {
             manager.close();
         }
     }
-
 }
 
